@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uppidi Fleet</title>
+  <meta name="description" content="An opinionated, full-lifecycle autonomous engineering fleet for Paseo, driven by a Forgejo/Gitea-family board.">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="download.html">Install</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/xpufx/paseo/tree/main/plugins/uppidi-fleet" target="_blank">GitHub</a>
+    </nav>
+    <span class="eyebrow">Paseo Plugin</span>
+    <h1>Uppidi Fleet</h1>
+    <p>An opinionated, full-lifecycle autonomous engineering fleet for Paseo, driven by a Forgejo/Gitea-family board. A human operator files and steers tickets; a Front Desk agent talks to the operator; one Orchestrator per repository triages, decomposes, and dispatches; ephemeral coding workers implement.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>The Concept in One Picture</h2>
+      <pre class="ascii">Forgejo board (source of truth)
+┌───────────────────────────────────────────────────────────────┐
+│ issues · PRs · comments · scoped labels                       │
+│   state/  priority/  attention/  spec/  target/  verify/      │
+└───────────────────────────────┬───────────────────────────────┘
+                                │ webhooks (POST /forgejo)
+                                ▼
+┌───────────────────────────────────────────────────────────────┐
+│ bundled hook router  (server/hook-router.ts)                  │
+│   classify: routine repo events → that repo's Orchestrator    │
+│             frontdesk events    → Front Desk                  │
+└───────────────┬───────────────────────────────┬───────────────┘
+                │ per-repo queue                │ frontdesk queue
+      routine repo events            frontdesk-directed events
+      (attention/*, comments,        (attention/frontdesk,
+       labels, PRs, pushes)           attention/2-user, /frontdesk)
+                │                               │
+                ▼                               ▼
+┌───────────────────────────────┐   ┌───────────────────────────┐
+│ Orchestrator (one per repo)   │   │ Front Desk (operator      │
+│ triage · shape · dispatch ·   │   │ liaison + triage intake)  │
+│ review · merge                │   └─────────────▲─────────────┘
+└───────────────┬───────────────┘                 │ operator chat
+                │ dispatch                        │
+                ▼                             operator
+┌───────────────────────────────┐
+│ coding workers (ephemeral)    │
+│ one isolated worktree each    │
+└───────────────────────────────┘
+
+Cockpit UI (Paseo sidebar + workspace panel): agent tree, board, queues, router
+health, role models, and Front Desk / orchestrator spawn controls.</pre>
+    </section>
+
+    <section>
+      <h2>Screenshots</h2>
+      <div class="screenshot-grid">
+        <figure>
+          <img src="assets/screenshots/fleet-main.png" alt="Uppidi Fleet Cockpit — agent tree, board, queues and router health" loading="lazy">
+          <figcaption>Cockpit — full surface</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/screenshots/fleet-kanban.png" alt="Kanban board — drag-and-drop issue columns" loading="lazy">
+          <figcaption>Kanban board</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/screenshots/fleet-forge-issues.png" alt="Forge issues — the board as source of truth" loading="lazy">
+          <figcaption>Forge issues</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/screenshots/fleet-work-queue.png" alt="Work Queue — open issues, Fleet Needs Attention board" loading="lazy">
+          <figcaption>Work Queue</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/screenshots/fleet-frontdesk-chat.png" alt="Front Desk chat — operator-facing liaison" loading="lazy">
+          <figcaption>Front Desk chat</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/screenshots/fleet-settings.png" alt="Settings — hook service control, listen host and port" loading="lazy">
+          <figcaption>Settings</figcaption>
+        </figure>
+        <figure>
+          <img src="assets/screenshots/fleet-tooling.png" alt="Tooling — agent tool configuration" loading="lazy">
+          <figcaption>Tooling</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section>
+      <h2>Four Moving Parts</h2>
+      <ol>
+        <li><strong>The Forge</strong> stores all durable state (issues, comments, labels, commits) and emits webhook events when that state changes.</li>
+        <li><strong>The Bundled Hook Router</strong> receives events, classifies them, queues them per repository, and delivers them over Paseo's transport: routine events go directly to that repository's Orchestrator; frontdesk-directed events go to the Front Desk.</li>
+        <li><strong>The Agents</strong> do the work. Three roles: <strong>Front Desk</strong> (operator-facing liaison and triage intake), <strong>Orchestrator</strong> (one per repo; triage + dispatch + review), and <strong>Coding Workers</strong> (ephemeral, one worktree each). Behaviour is encoded in <em>Skills</em>, not in the plugin.</li>
+        <li><strong>The Cockpit</strong> is the Paseo surface that renders the board, the agent tree, the router queues, and controls for spawning Front Desk/orchestrators, muting repos, and editing role models.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>The Roles</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>How many</th>
+            <th>Owns</th>
+            <th>Never does</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Front Desk</td>
+            <td>0–1 per fleet</td>
+            <td>Operator-facing liaison and triage intake; takes frontdesk-directed events; routes escalations; registers with the router</td>
+            <td>Implement code; receive routine per-repo webhooks</td>
+          </tr>
+          <tr>
+            <td>Orchestrator</td>
+            <td>One per enrolled repo</td>
+            <td>Triage, shaping, dispatch, PR pre-flight/merge, board hygiene</td>
+            <td>Edit source files or check out feature branches itself</td>
+          </tr>
+          <tr>
+            <td>Coding Worker</td>
+            <td>One per ticket (ephemeral)</td>
+            <td>Implements in an isolated git worktree, opens a PR</td>
+            <td>Touch a checkout the operator is using; scan/self-claim</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Board Lifecycle</h2>
+      <p>A ticket's life is expressed entirely through scoped labels:</p>
+      <pre class="ascii">state/0-triage → state/1-wip → state/2-review → state/3-verify → state/4-done
+attention/0-orchestrator ↔ attention/1-agent ↔ attention/2-user ↔ attention/3-ignore</pre>
+      <p><code>attention/*</code> is the operator's steering channel; <code>state/*</code> is the execution lifecycle; <code>priority/*</code> orders the queue; <code>spec/*</code> is pre-code shaping. Applying a label inside a scope evicts the previous one if created with <code>exclusive: true</code>.</p>
+      <div class="callout">
+        <strong>Operator Attention Policy:</strong> Only <code>attention/2-user</code> signals that human operator intervention is required. <code>state/3-verify</code> or <code>state/2-review</code> represent execution milestones and never imply operator attention or suppress orchestrator sweeps unless explicitly paired with <code>attention/2-user</code>.
+      </div>
+    </section>
+
+    <section>
+      <h2>The Cockpit Surface</h2>
+      <p>The plugin registers one primary surface with three tabs:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Tab</th>
+            <th>What it shows</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Agents & Fleet</strong> (tree)</td>
+            <td>Hierarchical view: projects → orchestrators → workers, with deterministic state badges (working / running / permission-prompt / attention-required / sleeping / idle / quota / failed), worktree names, parentage, and per-repo enrolment/mute flags.</td>
+          </tr>
+          <tr>
+            <td><strong>Work Queue</strong> (dashboard)</td>
+            <td>Open issues from the board with status, owner, and labels; a <strong>Fleet Needs Attention</strong> board surfaces blocked agents, filter presets (Needs Attention, Triage/Review, In Progress, Verify).</td>
+          </tr>
+          <tr>
+            <td><strong>Settings</strong></td>
+            <td>Hook service management (start/stop/restart, listen host + port), links into role-model editing.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Skills: How the Fleet Thinks</h2>
+      <p>Skills are Markdown instruction sets that Paseo loads on demand. The plugin ships sanitized, production-ready example Skills in <code>examples/skills/</code>:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Skill</th>
+            <th>Role</th>
+            <th>Example File</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>coding-agent</code></td>
+            <td>Coding worker — implement, verify, open the PR</td>
+            <td><code>examples/skills/coding-agent/SKILL.md</code></td>
+          </tr>
+          <tr>
+            <td><code>orchestrator</code></td>
+            <td>Orchestrator — triage, decompose, dispatch, pre-flight PRs</td>
+            <td><code>examples/skills/orchestrator/SKILL.md</code></td>
+          </tr>
+          <tr>
+            <td><code>front-desk</code></td>
+            <td>Front Desk — operator-facing liaison and triage intake</td>
+            <td><code>examples/skills/front-desk/SKILL.md</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Installation</h2>
+      <div class="card">
+        <span class="eyebrow">Paseo 0.9+</span>
+        <h3>From npm (recommended)</h3>
+        <pre><code>paseo plugin add npm:@xpufx/paseo-uppidi-fleet</code></pre>
+        <p>The npm package is <code>@xpufx/paseo-uppidi-fleet</code>; the plugin installs and displays as <strong>uppidi-fleet</strong> (the <code>id</code> in <code>paseo-plugin.json</code>).</p>
+      </div>
+      <div class="card">
+        <span class="eyebrow">From Git repository</span>
+        <pre><code>paseo plugin add xpufx/paseo --path plugins/uppidi-fleet</code></pre>
+      </div>
+      <p>After install, the plugin appears as a sidebar item and a workspace panel named <strong>Uppidi Fleet</strong>, plus a settings screen. The server entry (<code>index.server.ts</code>) registers all RPC handlers and starts the bundled webhook router automatically.</p>
+    </section>
+
+    <section>
+      <h2>Prerequisites</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Requirement</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Paseo ≥ 0.8.0</td>
+            <td>Plugin manifest requires it</td>
+          </tr>
+          <tr>
+            <td>Forgejo or Gitea-family host</td>
+            <td>Any <code>forgejo</code>/<code>gitea</code> instance; API used is <code>/api/v1</code></td>
+          </tr>
+          <tr>
+            <td>Repository access token</td>
+            <td>PAT with issue write scope (<code>read:user</code>, <code>read:repository</code>, <code>write:issue</code>; add <code>write:repository</code> if label management returns 403)</td>
+          </tr>
+          <tr>
+            <td>Agent provider + model</td>
+            <td>Any provider Paseo supports, per role</td>
+          </tr>
+          <tr>
+            <td>Host runner</td>
+            <td>Required for label triage and repository sweeps (Forgejo Actions workflows). A ForgeJo Actions runner with the host backend is preferred.</td>
+          </tr>
+          <tr>
+            <td>Git remote named for your forge</td>
+            <td>CLI wrappers resolve board context from <code>origin</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Webhook Router (Backend Daemon)</h2>
+      <p>The router is bundled into the plugin at <code>server/hook-router.ts</code> and started by <code>index.server.ts</code>. It's a plain Node <code>http</code> server — no systemd unit or separate bridge needed.</p>
+      <h3>Ingress & Classification</h3>
+      <ul>
+        <li>Endpoints: <code>POST /forgejo</code> and <code>POST /hook</code> (aliases)</li>
+        <li>Reads <code>X-Forgejo-Event</code> header</li>
+        <li><code>ping</code> events return <code>200 {ping:true}</code> — use Forgejo's <strong>Test delivery</strong></li>
+        <li>Derives repository key from payload, normalized to <code>host/owner/repo</code></li>
+        <li>Classifies:
+          <ul>
+            <li><strong>Front Desk events</strong> → special <code>frontdesk</code> queue (label <code>attention/frontdesk</code>, <code>attention/2-user</code>, or comment starting with <code>/frontdesk</code>)</li>
+            <li><strong>Bypass/SOS events</strong> → jumped to head of queue (<code>priority/0-SOS</code>, <code>flag/stop-work</code>, <code>attention/*</code>, slash commands)</li>
+            <li><strong>Everything else</strong> → repo's normal queue via event coalescing (default 7s debounce, max 20 events)</li>
+          </ul>
+        </li>
+      </ul>
+      <h3>Control Endpoints</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Method & Path</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>GET /health</code></td><td>Liveness + port</td></tr>
+          <tr><td><code>GET /status</code></td><td>Front desk record, paused queues, totals, repo count</td></tr>
+          <tr><td><code>GET /queues</code></td><td>Per-repo queue depth, busy state, orchestrator</td></tr>
+          <tr><td><code>GET/POST /frontdesk</code></td><td>Read/register Front Desk agent</td></tr>
+          <tr><td><code>GET/POST /handoff</code></td><td>Front Desk rotation</td></tr>
+          <tr><td><code>POST /orchestrator</code></td><td>Register orchestrator for a repo</td></tr>
+          <tr><td><code>POST /board-sweep</code></td><td>Run deterministic board check</td></tr>
+          <tr><td><code>POST /queues/:key/pause|resume|drain</code></td><td>Per-queue control</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Gap Analysis — What You Must Supply</h2>
+      <p>The plugin is deliberately minimal; adopting it means filling these gaps:</p>
+      <ul>
+        <li><strong>No label installer</strong> — only a generic seed at <code>plugins/forges/examples/labels/label-base.yaml</code> (covers <code>state/</code>, <code>priority/</code>, <code>attention/</code>, <code>spec/</code>, <code>flag/stop-work</code>). No seed for <code>target/*</code> or <code>verify/*</code>.</li>
+        <li><strong>Operational Skills live outside the plugin</strong> — production <code>orchestrator</code>, <code>front-desk</code>, <code>coding-agent</code> skills live in the repo at <code>.agents/skills/</code>. The plugin provides sanitized examples under <code>examples/skills/</code> for you to adapt.</li>
+        <li><strong>Action workflows are monorepo-level</strong> — <code>issue-label-triage.yml</code> and <code>stale-wip-sweep.yml</code> in <code>.forgejo/workflows/</code>; runner labels and agent account names are environment-specific.</li>
+        <li><strong>Issues surface is hardcoded</strong> — defaults to <code>FORGEJO_HOST=forge.mrs.uppidi.com</code> and repo <code>xpufx-org/paseo</code>. Export <code>FORGEJO_HOST</code> and <code>FORGEJO_TOKEN</code> until a settings field exists.</li>
+        <li><strong>Webhook secret not verified</strong> — <code>FORGE_HOOK_SECRET</code> is stored but never validated. Keep listener on loopback or front with authenticating proxy.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <hr>
+    <p><strong>Uppidi Fleet</strong> — Part of the <a href="https://github.com/xpufx/paseo" target="_blank">Paseo</a> ecosystem</p>
+    <p>
+      <a href="https://github.com/xpufx/paseo/tree/main/plugins/uppidi-fleet" target="_blank">GitHub</a>
+      ·
+      <a href="https://www.npmjs.com/package/@xpufx/paseo-uppidi-fleet" target="_blank">npm</a>
+      ·
+      <a href="download.html">Install</a>
+      ·
+      <a href="privacy.html">Privacy</a>
+    </p>
+    <p>Released under the <a href="https://github.com/xpufx/paseo/blob/main/plugins/uppidi-fleet/LICENSE" target="_blank">MIT License</a>.</p>
+  </footer>
+</body>
+</html>

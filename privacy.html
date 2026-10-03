@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy — Uppidi Fleet</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="download.html">Install</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/xpufx/paseo/tree/main/plugins/uppidi-fleet" target="_blank">GitHub</a>
+    </nav>
+    <span class="eyebrow">Privacy</span>
+    <h1>Privacy Statement</h1>
+  </header>
+
+  <main>
+    <section>
+      <h2>Data Collection</h2>
+      <p><strong>Uppidi Fleet collects no personal data, no telemetry, and no usage analytics.</strong> It is a self-hosted Paseo plugin that runs entirely on your infrastructure.</p>
+    </section>
+
+    <section>
+      <h2>What Runs on Your Machines</h2>
+      <ul>
+        <li><strong>Paseo daemon</strong> — runs locally or on your server; manages agents, worktrees, and the plugin.</li>
+        <li><strong>Uppidi Fleet plugin</strong> — runs inside the Paseo process; includes the webhook router (Node HTTP server on localhost by default).</li>
+        <li><strong>Hook router</strong> — receives Forgejo/Gitea webhooks; queues and delivers events to Paseo agents. No external connections.</li>
+        <li><strong>Agents (LLM calls)</strong> — your configured AI provider (OpenAI, Anthropic, local models, etc.) receives prompts you send. Review your provider's privacy policy.</li>
+        <li><strong>Forgejo/Gitea</strong> — your self-hosted or third-party forge; stores issues, comments, labels, and webhook secrets.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Network Connections</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Outbound Connections</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Paseo daemon</td>
+            <td>Your AI provider API (per your config); your Forgejo/Gitea API</td>
+          </tr>
+          <tr>
+            <td>Hook router</td>
+            <td>None (listens on localhost by default); Forgejo posts webhooks to it</td>
+          </tr>
+          <tr>
+            <td>Cockpit UI</td>
+            <td>None (served by Paseo's internal static server)</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>No connections to uppidi.com, paseo.dev, or any third-party analytics.</p>
+    </section>
+
+    <section>
+      <h2>Stored Data</h2>
+      <ul>
+        <li><strong>Queue files</strong> — <code>~/.config/uppidi-fleet/queues/</code> (persisted webhook messages, deduplicated, capped at 50 per repo)</li>
+        <li><strong>Router state</strong> — <code>~/.config/uppidi-fleet/</code> (frontdesk registration, orchestrator registrations, router config)</li>
+        <li><strong>Paseo agent state</strong> — <code>~/.paseo/agents/</code> (agent metadata, worktrees, lifecycle)</li>
+        <li><strong>Role models</strong> — <code>~/.paseo/uppidi-fleet-role-models.json</code> (your model selections per role)</li>
+      </ul>
+      <p>All stored locally on your machine/server. No cloud sync.</p>
+    </section>
+
+    <section>
+      <h2>Webhook Secret</h2>
+      <p>The router reads <code>FORGE_HOOK_SECRET</code> but <strong>does not currently verify</strong> the <code>X-Forgejo-Signature</code> header. Keep the listener on loopback (<code>127.0.0.1</code>) or place an authenticating reverse proxy in front if exposed publicly.</p>
+    </section>
+
+    <section>
+      <h2>Third-Party Services</h2>
+      <p>Uppidi Fleet itself integrates with no third-party services. Your configured AI provider and Forgejo/Gitea instance are under your control.</p>
+    </section>
+
+    <section>
+      <h2>Changes</h2>
+      <p>This policy may be updated as the plugin evolves. Check the <a href="https://github.com/xpufx/paseo/tree/main/plugins/uppidi-fleet" target="_blank">GitHub repository</a> for the latest version.</p>
+    </section>
+
+    <section>
+      <h2>Contact</h2>
+      <p>Questions: open an issue on <a href="https://github.com/xpufx/paseo/issues" target="_blank">github.com/xpufx/paseo/issues</a>.</p>
+    </section>
+  </main>
+
+  <footer>
+    <hr>
+    <p>
+      <a href="index.html">Home</a>
+      ·
+      <a href="download.html">Install</a>
+      ·
+      <a href="https://github.com/xpufx/paseo" target="_blank">Paseo</a>
+    </p>
+    <p>Released under the <a href="https://github.com/xpufx/paseo/blob/main/plugins/uppidi-fleet/LICENSE" target="_blank">MIT License</a>.</p>
+  </footer>
+</body>
+</html>

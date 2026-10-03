@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Install Uppidi Fleet</title>
+  <meta name="description" content="Install Uppidi Fleet Paseo plugin from npm or Git repository.">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="download.html">Install</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="https://github.com/xpufx/paseo/tree/main/plugins/uppidi-fleet" target="_blank">GitHub</a>
+    </nav>
+    <span class="eyebrow">Installation</span>
+    <h1>Install Uppidi Fleet</h1>
+    <p>Choose your installation method. Paseo 0.9+ required.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>From npm (Recommended)</h2>
+      <div class="card">
+        <pre><code>paseo plugin add npm:@xpufx/paseo-uppidi-fleet</code></pre>
+        <p>The npm package is <code>@xpufx/paseo-uppidi-fleet</code>; the plugin installs and displays as <strong>uppidi-fleet</strong> (the <code>id</code> in <code>paseo-plugin.json</code>).</p>
+        <p><a href="https://www.npmjs.com/package/@xpufx/paseo-uppidi-fleet" target="_blank">View on npm →</a></p>
+      </div>
+    </section>
+
+    <section>
+      <h2>From Git Repository</h2>
+      <div class="card">
+        <pre><code>paseo plugin add xpufx/paseo --path plugins/uppidi-fleet</code></pre>
+        <p>Installs directly from the <a href="https://github.com/xpufx/paseo/tree/main/plugins/uppidi-fleet" target="_blank">paseo monorepo</a>. Useful for testing unreleased changes or forks.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>After Installation</h2>
+      <ol>
+        <li>The plugin appears as a sidebar item and a workspace panel named <strong>Uppidi Fleet</strong>.</li>
+        <li>Open <strong>Settings</strong> in the panel to configure the hook service (listen host/port).</li>
+        <li>Register your Forgejo/Gitea host, repo, and PAT via environment variables or config files (see <a href="index.html#prerequisites">Prerequisites</a>).</li>
+        <li>Seed board labels using the <a href="https://github.com/xpufx/paseo/tree/main/plugins/forges/examples/labels/label-base.yaml" target="_blank">label-base.yaml</a> template.</li>
+        <li>Add webhooks on your Forgejo repos pointing to the router (default <code>http://<daemon-host>:8099/forgejo</code>).</li>
+        <li>Adapt the example Skills in <code>examples/skills/</code> for your environment and load them into your Paseo skills directory.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Source Code</h2>
+      <p><a href="https://github.com/xpufx/paseo/tree/main/plugins/uppidi-fleet" target="_blank">github.com/xpufx/paseo/tree/main/plugins/uppidi-fleet</a></p>
+    </section>
+  </main>
+
+  <footer>
+    <hr>
+    <p>
+      <a href="index.html">Home</a>
+      ·
+      <a href="https://github.com/xpufx/paseo" target="_blank">Paseo</a>
+      ·
+      <a href="privacy.html">Privacy</a>
+    </p>
+    <p>Released under the <a href="https://github.com/xpufx/paseo/blob/main/plugins/uppidi-fleet/LICENSE" target="_blank">MIT License</a>.</p>
+  </footer>
+</body>
+</html>
