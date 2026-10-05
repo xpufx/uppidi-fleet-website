@@ -1,23 +1,23 @@
 :root {
-  --bg: #0b1020;
-  --panel: #121a2b;
+  --bg: #16242a;
+  --panel: #1e293b;
   --accent: #6ee7b7;
   --accent-dim: rgba(110, 231, 183, 0.15);
-  --text: #e5eefb;
-  --muted: #a7b5d0;
-  --border: rgba(110, 231, 183, 0.25);
-  --card-bg: rgba(18, 26, 43, 0.9);
+  --text: #f8fafc;
+  --muted: #7a8aa0;
+  --border: rgba(255, 255, 255, 0.2);
+  --card-bg: rgba(22, 36, 42, 0.95);
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    --bg: #f5f7fa;
+    --bg: #eff1f1;
     --panel: #ffffff;
     --accent: #0d9488;
     --accent-dim: rgba(13, 148, 136, 0.1);
     --text: #1e2a3a;
     --muted: #5a6b85;
-    --border: rgba(13, 148, 136, 0.3);
+    --border: rgba(0, 0, 0, 0.1);
     --card-bg: #ffffff;
   }
 }
@@ -25,7 +25,9 @@
 * { box-sizing: border-box; }
 
 body {
+  max-width: none;
   margin: 0;
+  padding: 0;
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);

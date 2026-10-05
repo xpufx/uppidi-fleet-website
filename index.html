@@ -26,38 +26,10 @@
   <main>
     <section>
       <h2>The Concept in One Picture</h2>
-      <pre class="ascii">Forgejo board (source of truth)
-┌───────────────────────────────────────────────────────────────┐
-│ issues · PRs · comments · scoped labels                       │
-│   state/  priority/  attention/  spec/  target/  verify/      │
-└───────────────────────────────┬───────────────────────────────┘
-                                │ webhooks (POST /forgejo)
-                                ▼
-┌───────────────────────────────────────────────────────────────┐
-│ bundled hook router  (server/hook-router.ts)                  │
-│   classify: routine repo events → that repo's Orchestrator    │
-│             frontdesk events    → Front Desk                  │
-└───────────────┬───────────────────────────────┬───────────────┘
-                │ per-repo queue                │ frontdesk queue
-      routine repo events            frontdesk-directed events
-      (attention/*, comments,        (attention/frontdesk,
-       labels, PRs, pushes)           attention/2-user, /frontdesk)
-                │                               │
-                ▼                               ▼
-┌───────────────────────────────┐   ┌───────────────────────────┐
-│ Orchestrator (one per repo)   │   │ Front Desk (operator      │
-│ triage · shape · dispatch ·   │   │ liaison + triage intake)  │
-│ review · merge                │   └─────────────▲─────────────┘
-└───────────────┬───────────────┘                 │ operator chat
-                │ dispatch                        │
-                ▼                             operator
-┌───────────────────────────────┐
-│ coding workers (ephemeral)    │
-│ one isolated worktree each    │
-└───────────────────────────────┘
-
-Cockpit UI (Paseo sidebar + workspace panel): agent tree, board, queues, router
-health, role models, and Front Desk / orchestrator spawn controls.</pre>
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="assets/screenshots/forgejo-orchestration-light.png">
+        <img src="assets/screenshots/forgejo-orchestration-dark.png" alt="Forgejo orchestration board — issue tracking, PRs, webhooks and coding workers across isolated worktrees" loading="lazy">
+      </picture>
     </section>
 
     <section>
