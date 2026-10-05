@@ -33,6 +33,11 @@ body {
   line-height: 1.6;
 }
 
+.page-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
 header {
   padding: 4rem 2rem 2rem;
   text-align: center;
@@ -79,9 +84,7 @@ nav a:hover {
   background: var(--accent-dim);
 }
 
-main {
-  max-width: 900px;
-  margin: 0 auto;
+.page-wrapper main {
   padding: 2rem 1.5rem 4rem;
 }
 
@@ -196,7 +199,7 @@ figcaption {
 
 .screenshot-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
   gap: 1.5rem;
   margin: 1.5rem 0;
 }
@@ -205,10 +208,27 @@ figcaption {
   margin: 0;
 }
 
+.screenshot-grid a {
+  cursor: zoom-in;
+  display: block;
+}
+
+.screenshot-grid a:hover {
+  box-shadow: 0 0 0 1px var(--accent);
+  transition: box-shadow 0.2s ease;
+}
+
 .screenshot-grid img {
   width: 100%;
   aspect-ratio: 16/10;
   object-fit: cover;
+  border-radius: 8px;
+}
+
+.screenshot-grid figcaption {
+  margin-top: 0.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .card {

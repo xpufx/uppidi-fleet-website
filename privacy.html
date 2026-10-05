@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="page-wrapper">
   <header>
     <nav>
       <a href="index.html">Home</a>
@@ -67,10 +68,12 @@
     <section>
       <h2>Stored Data</h2>
       <ul>
-        <li><strong>Queue files</strong> — <code>~/.config/uppidi-fleet/queues/</code> (persisted webhook messages, deduplicated, capped at 50 per repo)</li>
-        <li><strong>Router state</strong> — <code>~/.config/uppidi-fleet/</code> (frontdesk registration, orchestrator registrations, router config)</li>
+        <li><strong>Queue files</strong> — <code>~/.paseo/plugin-data/xpufx/uppidi-fleet/queues/</code> (persisted webhook messages, deduplicated, capped at 50 per repo)</li>
+        <li><strong>Router state</strong> — <code>~/.paseo/plugin-data/xpufx/uppidi-fleet/orchestrators/</code> (frontdesk registration, orchestrator registrations, router config)</li>
+        <li><strong>Router config (legacy)</strong> — <code>~/.config/uppidi-fleet/router-config.json</code> (fallback location)</li>
         <li><strong>Paseo agent state</strong> — <code>~/.paseo/agents/</code> (agent metadata, worktrees, lifecycle)</li>
         <li><strong>Role models</strong> — <code>~/.paseo/uppidi-fleet-role-models.json</code> (your model selections per role)</li>
+        <li><strong>Metrics rollup</strong> — <code>~/.paseo/plugin-data/xpufx/uppidi-fleet/metrics.json</code> (per-provider/model usage receipts)</li>
       </ul>
       <p>All stored locally on your machine/server. No cloud sync.</p>
     </section>
@@ -107,5 +110,6 @@
     </p>
     <p>Released under the <a href="https://github.com/xpufx/paseo/blob/main/plugins/uppidi-fleet/LICENSE" target="_blank">MIT License</a>.</p>
   </footer>
+  </div>
 </body>
 </html>
