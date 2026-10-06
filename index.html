@@ -126,11 +126,11 @@
     <section>
       <h2>Board Lifecycle</h2>
       <p>A ticket's life is expressed entirely through scoped labels:</p>
-      <pre class="ascii">state/0-triage → state/1-wip → state/2-review → state/3-verify → state/4-done
-attention/0-orchestrator ↔ attention/1-agent ↔ attention/2-user ↔ attention/3-ignore</pre>
+      <pre class="ascii">state/triage → state/wip → state/review → state/verify → state/done
+attention/orchestrator ↔ attention/agent ↔ attention/user ↔ attention/ignore</pre>
       <p><code>attention/*</code> is the operator's steering channel; <code>state/*</code> is the execution lifecycle; <code>priority/*</code> orders the queue; <code>spec/*</code> is pre-code shaping. Applying a label inside a scope evicts the previous one if created with <code>exclusive: true</code>.</p>
       <div class="callout">
-        <strong>Operator Attention Policy:</strong> Only <code>attention/2-user</code> signals that human operator intervention is required. <code>state/3-verify</code> or <code>state/2-review</code> represent execution milestones and never imply operator attention or suppress orchestrator sweeps unless explicitly paired with <code>attention/2-user</code>.
+        <strong>Operator Attention Policy:</strong> Only <code>attention/user</code> signals that human operator intervention is required. <code>state/verify</code> or <code>state/review</code> represent execution milestones and never imply operator attention or suppress orchestrator sweeps unless explicitly paired with <code>attention/user</code>.
       </div>
     </section>
 
@@ -256,8 +256,8 @@ attention/0-orchestrator ↔ attention/1-agent ↔ attention/2-user ↔ attentio
         <li>Derives repository key from payload, normalized to <code>host/owner/repo</code></li>
         <li>Classifies:
           <ul>
-            <li><strong>Front Desk events</strong> → special <code>frontdesk</code> queue (label <code>attention/frontdesk</code>, <code>attention/2-user</code>, or comment starting with <code>/frontdesk</code>)</li>
-            <li><strong>Bypass/SOS events</strong> → jumped to head of queue (<code>priority/0-SOS</code>, <code>flag/stop-work</code>, <code>attention/*</code>, slash commands)</li>
+            <li><strong>Front Desk events</strong> → special <code>frontdesk</code> queue (label <code>attention/frontdesk</code>, <code>attention/user</code>, or comment starting with <code>/frontdesk</code>)</li>
+            <li><strong>Bypass/SOS events</strong> → jumped to head of queue (<code>priority/sos</code>, <code>flag/stop-work</code>, <code>attention/*</code>, slash commands)</li>
             <li><strong>Everything else</strong> → repo's normal queue via event coalescing (default 7s debounce, max 20 events)</li>
           </ul>
         </li>
